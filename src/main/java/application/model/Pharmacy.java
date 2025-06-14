@@ -35,7 +35,6 @@ public class Pharmacy {
 		}
 	}
 	
-	
 	public int getId() {
 		return id;
 	}
