@@ -110,7 +110,7 @@ public class ControllerPatientCreate {
         // TODO   search for patient by id and name
 
         // if found, return "patient_show", else return error message and "patient_get"
-        Patient patient = patientRepository.findByIdAndFirstNameAndLastName(p.getId(), p.getFirstName(), p.getLastName());
+        Patient patient = patientRepository.findByIdAndLastName(p.getId(), p.getLastName());
         if (patient != null) {
             patient.setFirstName(p.getFirstName());
             patient.setLastName(p.getLastName());
