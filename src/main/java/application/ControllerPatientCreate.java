@@ -61,6 +61,14 @@ public class ControllerPatientCreate {
          * validate doctor last name and find the doctor id
          */
 
+        Doctor primaryDoc = doctorRepository.findByLastName(p.getPrimaryName());
+
+        if (primaryDoc == null) {
+            model.addAttribute("message", "SQL Error, Primary Doctor WAS NOT found.");
+            model.addAttribute("patient", p);
+            return "patient_register";
+        }
+
         //Need to handle id no longer being auto-generated.
         int newPatientID = sequence.getNextSequence("PATIENT_SEQUENCE");
         // create a model.patient instance
@@ -77,17 +85,11 @@ public class ControllerPatientCreate {
         patientM.setZipcode(p.getZipcode());
         patientM.setPrimaryName(p.getPrimaryName());
 
+        patientM.setId(newPatientID);
         patientRepository.insert(patientM);
 
-        Doctor primaryDoc = doctorRepository.findByLastName(p.getPrimaryName());
-
-        if (primaryDoc == null) {
-            model.addAttribute("message", "SQL Error, Primary Doctor WAS NOT found.");
-            model.addAttribute("patient", p);
-            return "patient_register";
-        }
-
         model.addAttribute("message", "Registration successful.");
+        p.setId(newPatientID);
         model.addAttribute("patient", p);
         return "patient_show";
     }
@@ -112,32 +114,25 @@ public class ControllerPatientCreate {
         // if found, return "patient_show", else return error message and "patient_get"
         Patient patient = patientRepository.findByIdAndLastName(p.getId(), p.getLastName());
         if (patient != null) {
-            patient.setFirstName(p.getFirstName());
-            patient.setLastName(p.getLastName());
-            patient.setBirthdate(p.getBirthdate());
-            patient.setSsn(p.getSsn());
-            patient.setStreet(p.getStreet());
-            patient.setCity(p.getCity());
-            patient.setState(p.getState());
-            patient.setZipcode(p.getZipcode());
-            patient.setPrimaryName(p.getPrimaryName());
-            model.addAttribute("patient", patient);
+            //copy data from model to view
+            p.setFirstName(patient.getFirstName());
+            p.setLastName(patient.getLastName());
+            p.setBirthdate(patient.getBirthdate());
+            p.setSsn(patient.getSsn());
+            p.setStreet(patient.getStreet());
+            p.setCity(patient.getCity());
+            p.setState(patient.getState());
+            p.setZipcode(patient.getZipcode());
+            p.setPrimaryName(patient.getPrimaryName());
+            model.addAttribute("patient", p);
             return "patient_show";
+
         } else {
             model.addAttribute("message", "SQL Error, Patient not found.");
             model.addAttribute("patient", p);
             return "patient_get";
         }
     }
-
-    /*
-     * return JDBC Connection using jdbcTemplate in Spring Server
-     */
-
-//    private Connection getConnection() throws SQLException {
-//        Connection conn = jdbcTemplate.getDataSource().getConnection();
-//        return conn;
-//    }
 }
 
 
