@@ -30,6 +30,12 @@ public class ControllerPrescriptionFill {
   @Autowired
   private PharmacyRepository pharmacyRepository;
 
+  @Autowired
+  private DoctorRepository doctorRepository;
+
+  @Autowired
+  private PatientRepository patientRepository;
+
   @GetMapping("/prescription/fill")
   public String getFillForm(Model model) {
     model.addAttribute("prescription", new PrescriptionView());
@@ -41,6 +47,12 @@ public class ControllerPrescriptionFill {
     Optional<Prescription> presc = prescriptionRepository.findById(view.getRxid());
     if (presc.isEmpty()) {
       model.addAttribute("message", "Prescription not found.");
+      model.addAttribute("prescription", view);
+      return "prescription_fill";
+    }
+
+    if (presc.get().getRefills() <= 0) {
+      model.addAttribute("message", "No more refills available.");
       model.addAttribute("prescription", view);
       return "prescription_fill";
     }
@@ -73,11 +85,35 @@ public class ControllerPrescriptionFill {
     request.setDateFilled(java.time.LocalDate.now().toString());
     request.setCost(String.format("%.2f", cost));
     presc.get().getFills().add(request);
+    presc.get().setRefills(presc.get().getRefills() - 1);
     prescriptionRepository.save(presc.get());
 
-    view.setCost(String.format("%.2f", cost));
+    view.setDoctorId(presc.get().getDoctorId());
+    Optional<Doctor> doctorOpt = Optional.ofNullable(
+        doctorRepository.findById(presc.get().getDoctorId()));
+    if (doctorOpt.isPresent()) {
+      view.setDoctorFirstName(doctorOpt.get().getFirstName());
+      view.setDoctorLastName(doctorOpt.get().getLastName());
+    }
+
+    view.setPatientId(presc.get().getPatientId());
+    Optional<Patient> patientOpt = patientRepository.findById(presc.get().getPatientId());
+    if (patientOpt.isPresent()) {
+      view.setPatientId(patientOpt.get().getId());
+      view.setPatientFirstName(patientOpt.get().getFirstName());
+    } else {
+      model.addAttribute("message", "Patient not found.");
+      model.addAttribute("prescription", view);
+      return "prescription_fill";
+    }
+
+    view.setQuantity(presc.get().getQuantity());
+    view.setRefillsRemaining(presc.get().getRefills());
+    view.setPharmacyID(pharmacy.getId());
     view.setDrugName(drug.getName());
     view.setPharmacyPhone(pharmacy.getPhone());
+    view.setDateFilled(request.getDateFilled());
+    view.setCost(String.format("%.2f", cost));
 
     model.addAttribute("message", "Prescription filled.");
     model.addAttribute("prescription", view);
