@@ -68,6 +68,13 @@ public class ControllerPrescriptionFill {
       }
     }
 
+    Prescription.FillRequest request = new Prescription.FillRequest();
+    request.setPharmacyID(pharmacy.getId());
+    request.setDateFilled(java.time.LocalDate.now().toString());
+    request.setCost(String.format("%.2f", cost));
+    presc.get().getFills().add(request);
+    prescriptionRepository.save(presc.get());
+
     view.setCost(String.format("%.2f", cost));
     view.setDrugName(drug.getName());
     view.setPharmacyPhone(pharmacy.getPhone());
