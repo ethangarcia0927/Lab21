@@ -33,6 +33,9 @@ public class ControllerPrescriptionFill {
   @Autowired
   private DoctorRepository doctorRepository;
 
+  @Autowired
+  private PatientRepository patientRepository;
+
   @GetMapping("/prescription/fill")
   public String getFillForm(Model model) {
     model.addAttribute("prescription", new PrescriptionView());
@@ -92,6 +95,19 @@ public class ControllerPrescriptionFill {
       view.setDoctorFirstName(doctorOpt.get().getFirstName());
       view.setDoctorLastName(doctorOpt.get().getLastName());
     }
+
+    view.setPatientId(presc.get().getPatientId());
+    Optional<Patient> patientOpt = patientRepository.findById(presc.get().getPatientId());
+    if (patientOpt.isPresent()) {
+      view.setPatientId(patientOpt.get().getId());
+      view.setPatientFirstName(patientOpt.get().getFirstName());
+    } else {
+      model.addAttribute("message", "Patient not found.");
+      model.addAttribute("prescription", view);
+      return "prescription_fill";
+    }
+
+    view.setQuantity(presc.get().getQuantity());
     view.setRefillsRemaining(presc.get().getRefills());
     view.setPharmacyID(pharmacy.getId());
     view.setDrugName(drug.getName());
